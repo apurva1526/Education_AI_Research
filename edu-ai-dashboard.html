@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduAI Research Observatory</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-card-hover: #1a1a25;
+            --accent-primary: #6366f1;
+            --accent-secondary: #22d3ee;
+            --accent-tertiary: #f472b6;
+            --accent-success: #34d399;
+            --accent-warning: #fbbf24;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-subtle: rgba(255,255,255,0.06);
+            --border-glow: rgba(99, 102, 241, 0.3);
+            --gradient-mesh: radial-gradient(ellipse at 20% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                            radial-gradient(ellipse at 80% 100%, rgba(34, 211, 238, 0.1) 0%, transparent 50%),
+                            radial-gradient(ellipse at 50% 50%, rgba(244, 114, 182, 0.05) 0%, transparent 70%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        .bg-mesh {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--gradient-mesh);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .logo-section h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-section .tagline {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            letter-spacing: 0.05em;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .stat-pill {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 100px;
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .stat-pill .number {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent-secondary);
+        }
+
+        .stat-pill .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Filters Bar */
+        .filters-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        select, .search-input {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-primary);
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        select:hover, .search-input:hover {
+            border-color: var(--border-glow);
+        }
+
+        select:focus, .search-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .search-input {
+            width: 280px;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: var(--border-glow);
+            transform: translateY(-2px);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .card-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .card-badge {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 100px;
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--accent-primary);
+        }
+
+        /* Span classes */
+        .span-3 { grid-column: span 3; }
+        .span-4 { grid-column: span 4; }
+        .span-5 { grid-column: span 5; }
+        .span-6 { grid-column: span 6; }
+        .span-7 { grid-column: span 7; }
+        .span-8 { grid-column: span 8; }
+        .span-12 { grid-column: span 12; }
+
+        /* Timeline Chart */
+        .timeline-card {
+            min-height: 350px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 280px;
+        }
+
+        /* Country Map Card */
+        .country-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .country-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: rgba(255,255,255,0.02);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .country-item:hover {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .country-flag {
+            font-size: 1.5rem;
+        }
+
+        .country-info {
+            flex: 1;
+        }
+
+        .country-name {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .country-papers {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .country-bar {
+            width: 60px;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .country-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        /* Topic Bubbles */
+        .topics-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding-top: 0.5rem;
+        }
+
+        .topic-bubble {
+            padding: 0.5rem 1rem;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .topic-bubble:hover {
+            transform: scale(1.05);
+        }
+
+        .topic-bubble.stem { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
+        .topic-bubble.stem:hover { border-color: #818cf8; }
+        .topic-bubble.psychology { background: rgba(244, 114, 182, 0.15); color: #f472b6; }
+        .topic-bubble.psychology:hover { border-color: #f472b6; }
+        .topic-bubble.medical { background: rgba(52, 211, 153, 0.15); color: #34d399; }
+        .topic-bubble.medical:hover { border-color: #34d399; }
+        .topic-bubble.language { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+        .topic-bubble.language:hover { border-color: #fbbf24; }
+        .topic-bubble.k12 { background: rgba(34, 211, 238, 0.15); color: #22d3ee; }
+        .topic-bubble.k12:hover { border-color: #22d3ee; }
+        .topic-bubble.higher-ed { background: rgba(167, 139, 250, 0.15); color: #a78bfa; }
+        .topic-bubble.higher-ed:hover { border-color: #a78bfa; }
+
+        .topic-count {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-left: 0.25rem;
+        }
+
+        /* Research Methods */
+        .methods-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .method-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            background: rgba(255,255,255,0.02);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .method-item:hover {
+            background: rgba(99, 102, 241, 0.08);
+        }
+
+        .method-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .method-icon.quantitative { background: rgba(99, 102, 241, 0.2); }
+        .method-icon.qualitative { background: rgba(244, 114, 182, 0.2); }
+        .method-icon.mixed { background: rgba(34, 211, 238, 0.2); }
+        .method-icon.experimental { background: rgba(52, 211, 153, 0.2); }
+        .method-icon.review { background: rgba(251, 191, 36, 0.2); }
+
+        .method-info {
+            flex: 1;
+        }
+
+        .method-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .method-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .method-percentage {
+            font-family: 'Space Mono', monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--accent-secondary);
+        }
+
+        /* Citation Impact */
+        .impact-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .metric-box {
+            text-align: center;
+            padding: 1.25rem;
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .metric-box:hover {
+            background: rgba(99, 102, 241, 0.08);
+        }
+
+        .metric-value {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Papers List */
+        .papers-section {
+            margin-top: 0.5rem;
+        }
+
+        .papers-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .papers-count {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-btn.active {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: white;
+        }
+
+        .papers-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        .papers-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .papers-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .papers-list::-webkit-scrollbar-thumb {
+            background: var(--border-subtle);
+            border-radius: 2px;
+        }
+
+        .paper-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 1.25rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .paper-card:hover {
+            border-color: var(--border-glow);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .paper-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .paper-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+        }
+
+        .paper-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .paper-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+
+        .paper-tag {
+            font-size: 0.65rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.05);
+            color: var(--text-secondary);
+        }
+
+        .paper-tag.source-openalex { background: rgba(52, 211, 153, 0.15); color: #34d399; }
+        .paper-tag.source-arxiv { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+        .paper-tag.source-semantic { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
+
+        /* Trending Section */
+        .trending-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .trending-item:last-child {
+            border-bottom: none;
+        }
+
+        .trending-rank {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            width: 24px;
+        }
+
+        .trending-term {
+            flex: 1;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .trending-change {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .trending-change.up {
+            background: rgba(52, 211, 153, 0.15);
+            color: #34d399;
+        }
+
+        .trending-change.down {
+            background: rgba(248, 113, 113, 0.15);
+            color: #f87171;
+        }
+
+        /* Source Distribution */
+        .source-bar {
+            display: flex;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .source-segment {
+            transition: all 0.3s ease;
+        }
+
+        .source-segment:hover {
+            filter: brightness(1.2);
+        }
+
+        .source-segment.openalex { background: #34d399; }
+        .source-segment.semantic { background: #818cf8; }
+        .source-segment.arxiv { background: #fbbf24; }
+
+        .source-legend {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.openalex { background: #34d399; }
+        .legend-dot.semantic { background: #818cf8; }
+        .legend-dot.arxiv { background: #fbbf24; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 2rem;
+            position: relative;
+            animation: modalSlide 0.3s ease;
+        }
+
+        @keyframes modalSlide {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-right: 2rem;
+            line-height: 1.4;
+        }
+
+        .modal-authors {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal-abstract {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-meta {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            padding: 1.25rem;
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .modal-meta-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+        }
+
+        .modal-meta-value {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--accent-secondary);
+        }
+
+        .modal-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--accent-primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .modal-link:hover {
+            background: #4f46e5;
+            transform: translateY(-1px);
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .data-sources {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .data-source {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .span-3, .span-4, .span-5 { grid-column: span 6; }
+            .span-7, .span-8 { grid-column: span 12; }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            header { flex-direction: column; gap: 1.5rem; }
+            .header-stats { flex-wrap: wrap; }
+            .span-3, .span-4, .span-5, .span-6 { grid-column: span 12; }
+            .country-grid { grid-template-columns: 1fr; }
+            .filters-bar { flex-direction: column; }
+            .search-input { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"></div>
+    <div class="bg-grid"></div>
+
+    <div class="container">
+        <header>
+            <div class="logo-section">
+                <h1>EduAI Observatory</h1>
+                <p class="tagline">// RESEARCH TRENDS IN EDUCATION & ARTIFICIAL INTELLIGENCE</p>
+            </div>
+            <div class="header-stats">
+                <div class="stat-pill">
+                    <span class="number" id="totalPapers">12,847</span>
+                    <span class="label">Papers</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="number" id="totalCountries">67</span>
+                    <span class="label">Countries</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="number">2019-2025</span>
+                    <span class="label">Coverage</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="filters-bar">
+            <div class="filter-group">
+                <span class="filter-label">Year</span>
+                <select id="yearFilter">
+                    <option value="all">All Years</option>
+                    <option value="2025" selected>2025</option>
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                    <option value="2022">2022</option>
+                    <option value="2021">2021</option>
+                    <option value="2020">2020</option>
+                    <option value="2019">2019</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Topic</span>
+                <select id="topicFilter">
+                    <option value="all">All Topics</option>
+                    <option value="stem">STEM Education</option>
+                    <option value="language">Language Learning</option>
+                    <option value="assessment">AI Assessment</option>
+                    <option value="tutoring">Intelligent Tutoring</option>
+                    <option value="llm">LLMs in Education</option>
+                    <option value="ethics">Ethics & Fairness</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Source</span>
+                <select id="sourceFilter">
+                    <option value="all">All Sources</option>
+                    <option value="openalex">OpenAlex</option>
+                    <option value="semantic">Semantic Scholar</option>
+                    <option value="arxiv">arXiv</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Venue</span>
+                <select id="venueFilter">
+                    <option value="all">All Venues</option>
+                    <option value="aied">AIED</option>
+                    <option value="lak">LAK</option>
+                    <option value="edm">EDM</option>
+                    <option value="las">L@S</option>
+                    <option value="neurips">NeurIPS</option>
+                    <option value="journals">Journals</option>
+                </select>
+            </div>
+            <div class="filter-group" style="flex: 1; justify-content: flex-end;">
+                <input type="text" class="search-input" placeholder="Search papers, authors, keywords..." id="searchInput">
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Timeline Chart -->
+            <div class="card span-8 timeline-card">
+                <div class="card-header">
+                    <span class="card-title">Publication Timeline</span>
+                    <span class="card-badge">LIVE DATA</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="timelineChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Trending Terms -->
+            <div class="card span-4">
+                <div class="card-header">
+                    <span class="card-title">Trending Terms</span>
+                    <span class="card-badge">THIS MONTH</span>
+                </div>
+                <div class="trending-list">
+                    <div class="trending-item">
+                        <span class="trending-rank">01</span>
+                        <span class="trending-term">Large Language Models</span>
+                        <span class="trending-change up">+247%</span>
+                    </div>
+                    <div class="trending-item">
+                        <span class="trending-rank">02</span>
+                        <span class="trending-term">GPT-4 Education</span>
+                        <span class="trending-change up">+189%</span>
+                    </div>
+                    <div class="trending-item">
+                        <span class="trending-rank">03</span>
+                        <span class="trending-term">AI Tutoring Systems</span>
+                        <span class="trending-change up">+156%</span>
+                    </div>
+                    <div class="trending-item">
+                        <span class="trending-rank">04</span>
+                        <span class="trending-term">Automated Assessment</span>
+                        <span class="trending-change up">+98%</span>
+                    </div>
+                    <div class="trending-item">
+                        <span class="trending-rank">05</span>
+                        <span class="trending-term">Learning Analytics</span>
+                        <span class="trending-change up">+67%</span>
+                    </div>
+                    <div class="trending-item">
+                        <span class="trending-rank">06</span>
+                        <span class="trending-term">Adaptive Learning</span>
+                        <span class="trending-change down">-12%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Country Distribution -->
+            <div class="card span-5">
+                <div class="card-header">
+                    <span class="card-title">Top Contributing Countries</span>
+                    <span class="card-badge">BY PAPERS</span>
+                </div>
+                <div class="country-grid">
+                    <div class="country-item" onclick="filterByCountry('USA')">
+                        <span class="country-flag">🇺🇸</span>
+                        <div class="country-info">
+                            <div class="country-name">United States</div>
+                            <div class="country-papers">3,847 papers</div>
+                        </div>
+                        <div class="country-bar">
+                            <div class="country-bar-fill" style="width: 100%"></div>
+                        </div>
+                    </div>
+                    <div class="country-item" onclick="filterByCountry('CHN')">
+                        <span class="country-flag">🇨🇳</span>
+                        <div class="country-info">
+                            <div class="country-name">China</div>
+                            <div class="country-papers">2,956 papers</div>
+                        </div>
+                        <div class="country-bar">
+                            <div class="country-bar-fill" style="width: 77%"></div>
+                        </div>
+                    </div>
+                    <div class="country-item" onclick="filterByCountry('GBR')">
+                        <span class="country-flag">🇬🇧</span>
+                        <div class="country-info">
+                            <div class="country-name">United Kingdom</div>
+                            <div class="country-papers">1,423 papers</div>
+                        </div>
+                        <div class="country-bar">
+                            <div class="country-bar-fill" style="width: 37%"></div>
+                        </div>
+                    </div>
+                    <div class="country-item" onclick="filterByCountry('DEU')">
+                        <span class="country-flag">🇩🇪</span>
+                        <div class="country-info">
+                            <div class="country-name">Germany</div>
+                            <div class="country-papers">892 papers</div>
+                        </div>
+                        <div class="country-bar">
+                            <div class="country-bar-fill" style="width: 23%"></div>
+                        </div>
+                    </div>
+                    <div class="country-item" onclick="filterByCountry('AUS')">
+                        <span class="country-flag">🇦🇺</span>
+                        <div class="country-info">
+                            <div class="country-name">Australia</div>
+                            <div class="country-papers">756 papers</div>
+                        </div>
+                        <div class="country-bar">
+                            <div class="country-bar-fill" style="width: 20%"></div>
+                        </div>
+                    </div>
+                    <div class="country-item" onclick="filterByCountry('IND')">
+                        <span class="country-flag">🇮🇳</span>
+                        <div class="country-info">
+                            <div class="country-name">India</div>
+                            <div class="country-papers">634 papers</div>
+                        </div>
+                        <div class="country-bar">
+                            <div class="country-bar-fill" style="width: 16%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Topic Focus Areas -->
+            <div class="card span-4">
+                <div class="card-header">
+                    <span class="card-title">Topic Focus Areas</span>
+                    <span class="card-badge">CLICK TO FILTER</span>
+                </div>
+                <div class="topics-container">
+                    <span class="topic-bubble stem" onclick="filterByTopic('stem')">STEM<span class="topic-count">2,847</span></span>
+                    <span class="topic-bubble psychology" onclick="filterByTopic('psychology')">Psychology<span class="topic-count">1,923</span></span>
+                    <span class="topic-bubble medical" onclick="filterByTopic('medical')">Medical Ed<span class="topic-count">1,456</span></span>
+                    <span class="topic-bubble language" onclick="filterByTopic('language')">Language<span class="topic-count">1,834</span></span>
+                    <span class="topic-bubble k12" onclick="filterByTopic('k12')">K-12<span class="topic-count">2,156</span></span>
+                    <span class="topic-bubble higher-ed" onclick="filterByTopic('higher-ed')">Higher Ed<span class="topic-count">2,631</span></span>
+                    <span class="topic-bubble stem" onclick="filterByTopic('cs')">Comp Sci<span class="topic-count">1,567</span></span>
+                    <span class="topic-bubble psychology" onclick="filterByTopic('assessment')">Assessment<span class="topic-count">1,234</span></span>
+                    <span class="topic-bubble medical" onclick="filterByTopic('special')">Special Ed<span class="topic-count">478</span></span>
+                    <span class="topic-bubble language" onclick="filterByTopic('writing')">Writing<span class="topic-count">892</span></span>
+                </div>
+            </div>
+
+            <!-- Citation Impact -->
+            <div class="card span-3">
+                <div class="card-header">
+                    <span class="card-title">Citation Impact</span>
+                    <span class="card-badge">2024-2025</span>
+                </div>
+                <div class="impact-metrics">
+                    <div class="metric-box">
+                        <div class="metric-value">24.7</div>
+                        <div class="metric-label">Avg Citations</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-value">48</div>
+                        <div class="metric-label">H-Index</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-value">89%</div>
+                        <div class="metric-label">Open Access</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-value">3.2</div>
+                        <div class="metric-label">Avg Authors</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Research Methods -->
+            <div class="card span-4">
+                <div class="card-header">
+                    <span class="card-title">Research Methods</span>
+                    <span class="card-badge">METHODOLOGY</span>
+                </div>
+                <div class="methods-list">
+                    <div class="method-item" onclick="filterByMethod('quantitative')">
+                        <div class="method-icon quantitative">📊</div>
+                        <div class="method-info">
+                            <div class="method-name">Quantitative</div>
+                            <div class="method-desc">Statistical analysis, experiments</div>
+                        </div>
+                        <div class="method-percentage">42%</div>
+                    </div>
+                    <div class="method-item" onclick="filterByMethod('mixed')">
+                        <div class="method-icon mixed">🔄</div>
+                        <div class="method-info">
+                            <div class="method-name">Mixed Methods</div>
+                            <div class="method-desc">Combined approaches</div>
+                        </div>
+                        <div class="method-percentage">28%</div>
+                    </div>
+                    <div class="method-item" onclick="filterByMethod('qualitative')">
+                        <div class="method-icon qualitative">💬</div>
+                        <div class="method-info">
+                            <div class="method-name">Qualitative</div>
+                            <div class="method-desc">Interviews, case studies</div>
+                        </div>
+                        <div class="method-percentage">15%</div>
+                    </div>
+                    <div class="method-item" onclick="filterByMethod('review')">
+                        <div class="method-icon review">📚</div>
+                        <div class="method-info">
+                            <div class="method-name">Review/Meta</div>
+                            <div class="method-desc">Literature reviews</div>
+                        </div>
+                        <div class="method-percentage">15%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Source Distribution -->
+            <div class="card span-4">
+                <div class="card-header">
+                    <span class="card-title">Data Sources</span>
+                    <span class="card-badge">AGGREGATED</span>
+                </div>
+                <div class="source-bar">
+                    <div class="source-segment openalex" style="width: 55%"></div>
+                    <div class="source-segment semantic" style="width: 30%"></div>
+                    <div class="source-segment arxiv" style="width: 15%"></div>
+                </div>
+                <div class="source-legend">
+                    <div class="legend-item">
+                        <span class="legend-dot openalex"></span>
+                        <span>OpenAlex (55%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot semantic"></span>
+                        <span>Semantic Scholar (30%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot arxiv"></span>
+                        <span>arXiv (15%)</span>
+                    </div>
+                </div>
+                <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle);">
+                    <div class="card-title" style="margin-bottom: 0.75rem;">Last Updated</div>
+                    <div style="font-family: 'Space Mono', monospace; color: var(--accent-secondary);">
+                        Feb 14, 2025 • 09:42 UTC
+                    </div>
+                </div>
+            </div>
+
+            <!-- Topic Timeline -->
+            <div class="card span-4">
+                <div class="card-header">
+                    <span class="card-title">Topic Evolution</span>
+                    <span class="card-badge">OVER TIME</span>
+                </div>
+                <div class="chart-container" style="height: 200px;">
+                    <canvas id="topicChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Papers List -->
+            <div class="card span-12">
+                <div class="card-header">
+                    <span class="card-title">Research Papers</span>
+                    <div class="papers-header" style="margin-bottom: 0;">
+                        <span class="papers-count" id="filteredCount">Showing 12,847 papers</span>
+                        <div class="view-toggle">
+                            <button class="toggle-btn active">Recent</button>
+                            <button class="toggle-btn">Most Cited</button>
+                            <button class="toggle-btn">Trending</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="papers-list" id="papersList">
+                    <!-- Papers will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <div>
+                <p>EduAI Observatory • Open Research Intelligence Platform</p>
+                <p style="margin-top: 0.25rem;">Data updated daily from open academic sources</p>
+            </div>
+            <div class="data-sources">
+                <span class="data-source">
+                    <span class="legend-dot openalex"></span>
+                    OpenAlex API
+                </span>
+                <span class="data-source">
+                    <span class="legend-dot semantic"></span>
+                    Semantic Scholar API
+                </span>
+                <span class="data-source">
+                    <span class="legend-dot arxiv"></span>
+                    arXiv API
+                </span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Paper Modal -->
+    <div class="modal-overlay" id="paperModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <h2 class="modal-title" id="modalTitle"></h2>
+            <p class="modal-authors" id="modalAuthors"></p>
+            <p class="modal-abstract" id="modalAbstract"></p>
+            <div class="modal-meta">
+                <div class="modal-meta-item">
+                    <span class="modal-meta-label">Year</span>
+                    <span class="modal-meta-value" id="modalYear"></span>
+                </div>
+                <div class="modal-meta-item">
+                    <span class="modal-meta-label">Citations</span>
+                    <span class="modal-meta-value" id="modalCitations"></span>
+                </div>
+                <div class="modal-meta-item">
+                    <span class="modal-meta-label">Venue</span>
+                    <span class="modal-meta-value" id="modalVenue"></span>
+                </div>
+                <div class="modal-meta-item">
+                    <span class="modal-meta-label">Method</span>
+                    <span class="modal-meta-value" id="modalMethod"></span>
+                </div>
+            </div>
+            <a href="#" class="modal-link" id="modalLink" target="_blank">
+                View Full Paper →
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Sample paper data (in production, this would come from your API)
+        const papers = [
+            {
+                id: 1,
+                title: "Large Language Models as Intelligent Tutors: A Systematic Review of GPT-4 Applications in STEM Education",
+                authors: "Chen, L., Martinez, A., & Williams, R.",
+                year: 2025,
+                citations: 47,
+                venue: "AIED 2025",
+                country: "USA",
+                topic: "STEM",
+                method: "Review",
+                source: "openalex",
+                abstract: "This systematic review examines the integration of large language models, particularly GPT-4, in STEM education contexts. We analyzed 156 empirical studies published between 2023-2025, identifying key implementation patterns, learning outcomes, and pedagogical considerations. Our findings suggest significant improvements in personalized feedback and adaptive questioning, while highlighting concerns about over-reliance and critical thinking development.",
+                url: "https://doi.org/example1"
+            },
+            {
+                id: 2,
+                title: "Adaptive Assessment Systems Using Transformer Models: Evidence from a Randomized Controlled Trial",
+                authors: "Kumar, S., Johnson, M., & Lee, H.",
+                year: 2025,
+                citations: 32,
+                venue: "LAK 2025",
+                country: "UK",
+                topic: "Assessment",
+                method: "Quantitative",
+                source: "semantic",
+                abstract: "We present results from a large-scale RCT (n=4,200) comparing traditional computer-adaptive testing with transformer-based assessment systems in K-12 mathematics. The AI-enhanced system demonstrated 23% improvement in measurement precision while reducing test length by 35%. Implications for equitable assessment practices are discussed.",
+                url: "https://doi.org/example2"
+            },
+            {
+                id: 3,
+                title: "ChatGPT in Medical Education: Student Perceptions and Learning Outcomes Across 12 Universities",
+                authors: "Zhang, W., Smith, J., et al.",
+                year: 2024,
+                citations: 89,
+                venue: "Medical Education",
+                country: "China",
+                topic: "Medical",
+                method: "Mixed",
+                source: "openalex",
+                abstract: "This multi-institutional study investigates medical students' adoption of ChatGPT for learning across 12 universities in 5 countries. Using mixed methods (surveys n=3,400, interviews n=120), we found widespread adoption (78%) primarily for exam preparation and clinical reasoning practice. Learning outcomes showed improvement in diagnostic accuracy but concerns emerged regarding clinical communication skills.",
+                url: "https://doi.org/example3"
+            },
+            {
+                id: 4,
+                title: "Fairness and Bias in AI-Powered Writing Feedback: A Critical Analysis of Automated Essay Scoring",
+                authors: "Okonkwo, A., Rivera, M., & Tanaka, K.",
+                year: 2024,
+                citations: 156,
+                venue: "EDM 2024",
+                country: "Germany",
+                topic: "Writing",
+                method: "Quantitative",
+                source: "arxiv",
+                abstract: "We investigate algorithmic bias in commercial AI writing feedback tools using a dataset of 50,000 student essays across diverse linguistic backgrounds. Our analysis reveals systematic scoring disparities correlated with dialect variation and first language background. We propose a debiasing framework that reduces score gaps by 67% while maintaining validity metrics.",
+                url: "https://arxiv.org/example4"
+            },
+            {
+                id: 5,
+                title: "Intelligent Tutoring Systems 2.0: Integration of Multimodal Learning Analytics with Generative AI",
+                authors: "Park, J., Anderson, T., & Müller, F.",
+                year: 2025,
+                citations: 28,
+                venue: "arXiv preprint",
+                country: "Australia",
+                topic: "Tutoring",
+                method: "Experimental",
+                source: "arxiv",
+                abstract: "We present ITS 2.0, a next-generation intelligent tutoring system that combines real-time multimodal learning analytics (eye-tracking, facial expression, interaction logs) with generative AI for dynamic content adaptation. In a controlled study with 800 undergraduate students, ITS 2.0 achieved 31% improvement in learning gains compared to traditional ITS approaches.",
+                url: "https://arxiv.org/example5"
+            },
+            {
+                id: 6,
+                title: "The Impact of AI Writing Assistants on Second Language Learning: A Longitudinal Study",
+                authors: "Nakamura, Y., Brown, E., & Garcia, L.",
+                year: 2024,
+                citations: 73,
+                venue: "L@S 2024",
+                country: "Japan",
+                topic: "Language",
+                method: "Mixed",
+                source: "semantic",
+                abstract: "This two-year longitudinal study tracked 1,200 EFL students using AI writing assistants. We found significant improvements in grammatical accuracy and vocabulary diversity, but noted potential negative effects on independent writing skills. Recommendations for scaffolded integration are provided.",
+                url: "https://doi.org/example6"
+            },
+            {
+                id: 7,
+                title: "Ethical Frameworks for AI in K-12 Education: A Delphi Study with International Stakeholders",
+                authors: "Fernandez, C., Wilson, P., et al.",
+                year: 2025,
+                citations: 19,
+                venue: "Computers & Education",
+                country: "Spain",
+                topic: "K-12",
+                method: "Qualitative",
+                source: "openalex",
+                abstract: "Through a three-round Delphi study with 84 experts from 23 countries, we developed a comprehensive ethical framework for AI deployment in K-12 settings. The framework addresses data privacy, algorithmic transparency, human oversight, and equity considerations, with practical implementation guidelines.",
+                url: "https://doi.org/example7"
+            },
+            {
+                id: 8,
+                title: "Predicting Student Dropout in MOOCs Using Deep Learning: A Comparative Study of Architectures",
+                authors: "Liu, X., Thompson, R., & Singh, A.",
+                year: 2024,
+                citations: 112,
+                venue: "NeurIPS Education",
+                country: "Canada",
+                topic: "Higher Ed",
+                method: "Quantitative",
+                source: "arxiv",
+                abstract: "We compare transformer, LSTM, and graph neural network architectures for early prediction of MOOC dropout using data from 2.3 million learners. Our novel temporal-aware graph transformer achieves 94.2% AUC at week 2, enabling timely interventions. Code and datasets are publicly available.",
+                url: "https://arxiv.org/example8"
+            },
+            {
+                id: 9,
+                title: "AI-Enhanced Formative Assessment in Psychology Education: Effects on Metacognition and Self-Regulation",
+                authors: "Hernandez, M., Kim, S., & Davies, J.",
+                year: 2025,
+                citations: 24,
+                venue: "British Journal of Educational Psychology",
+                country: "USA",
+                topic: "Psychology",
+                method: "Experimental",
+                source: "openalex",
+                abstract: "This experimental study (n=640) examined the effects of AI-generated formative feedback on psychology students' metacognitive skills and self-regulated learning. Results indicate significant improvements in calibration accuracy and study strategy adaptation, with larger effects for students with initially lower metacognitive awareness.",
+                url: "https://doi.org/example9"
+            },
+            {
+                id: 10,
+                title: "Computer Science Education in the Age of AI Assistants: Rethinking Programming Pedagogy",
+                authors: "Patel, N., Wang, Y., & O'Brien, K.",
+                year: 2024,
+                citations: 201,
+                venue: "ACM SIGCSE",
+                country: "India",
+                topic: "CS",
+                method: "Mixed",
+                source: "semantic",
+                abstract: "As AI coding assistants become ubiquitous, we propose a fundamental rethinking of introductory programming education. Based on analysis of 50 CS programs and interviews with 200 instructors, we present a new pedagogical framework emphasizing computational thinking, code review skills, and AI collaboration competencies.",
+                url: "https://doi.org/example10"
+            }
+        ];
+
+        // Render papers
+        function renderPapers(papersToRender) {
+            const container = document.getElementById('papersList');
+            container.innerHTML = papersToRender.map(paper => `
+                <div class="paper-card" onclick="openPaperModal(${paper.id})">
+                    <div class="paper-title">${paper.title}</div>
+                    <div class="paper-meta">
+                        <span>👤 ${paper.authors}</span>
+                        <span>📅 ${paper.year}</span>
+                        <span>📊 ${paper.citations} citations</span>
+                        <span>🏛️ ${paper.venue}</span>
+                    </div>
+                    <div class="paper-tags">
+                        <span class="paper-tag source-${paper.source}">${paper.source}</span>
+                        <span class="paper-tag">${paper.topic}</span>
+                        <span class="paper-tag">${paper.method}</span>
+                        <span class="paper-tag">${paper.country}</span>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('filteredCount').textContent = `Showing ${papersToRender.length} papers`;
+        }
+
+        // Modal functions
+        function openPaperModal(paperId) {
+            const paper = papers.find(p => p.id === paperId);
+            if (!paper) return;
+
+            document.getElementById('modalTitle').textContent = paper.title;
+            document.getElementById('modalAuthors').textContent = paper.authors;
+            document.getElementById('modalAbstract').textContent = paper.abstract;
+            document.getElementById('modalYear').textContent = paper.year;
+            document.getElementById('modalCitations').textContent = paper.citations;
+            document.getElementById('modalVenue').textContent = paper.venue;
+            document.getElementById('modalMethod').textContent = paper.method;
+            document.getElementById('modalLink').href = paper.url;
+
+            document.getElementById('paperModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('paperModal').classList.remove('active');
+        }
+
+        // Filter functions
+        function filterByCountry(country) {
+            console.log(`Filtering by country: ${country}`);
+            // In production, this would filter the papers
+        }
+
+        function filterByTopic(topic) {
+            console.log(`Filtering by topic: ${topic}`);
+        }
+
+        function filterByMethod(method) {
+            console.log(`Filtering by method: ${method}`);
+        }
+
+        // Close modal on overlay click
+        document.getElementById('paperModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // Toggle buttons
+        document.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Initialize charts
+        function initCharts() {
+            // Timeline Chart
+            const timelineCtx = document.getElementById('timelineChart').getContext('2d');
+            new Chart(timelineCtx, {
+                type: 'line',
+                data: {
+                    labels: ['2019', '2020', '2021', '2022', '2023', '2024', '2025'],
+                    datasets: [
+                        {
+                            label: 'Total Papers',
+                            data: [890, 1240, 1680, 2340, 3890, 5420, 6200],
+                            borderColor: '#6366f1',
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'LLM-Related',
+                            data: [45, 78, 124, 340, 1890, 3200, 4100],
+                            borderColor: '#22d3ee',
+                            backgroundColor: 'rgba(34, 211, 238, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            align: 'end',
+                            labels: {
+                                color: '#94a3b8',
+                                usePointStyle: true,
+                                padding: 20,
+                                font: { family: 'DM Sans', size: 12 }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#64748b', font: { family: 'Space Mono' } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#64748b', font: { family: 'Space Mono' } }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+
+            // Topic Evolution Chart
+            const topicCtx = document.getElementById('topicChart').getContext('2d');
+            new Chart(topicCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['STEM', 'Language', 'Medical', 'K-12', 'Higher Ed', 'Assessment'],
+                    datasets: [
+                        {
+                            label: '2023',
+                            data: [680, 520, 380, 560, 720, 340],
+                            backgroundColor: 'rgba(99, 102, 241, 0.5)',
+                            borderRadius: 4
+                        },
+                        {
+                            label: '2024',
+                            data: [920, 680, 520, 780, 920, 480],
+                            backgroundColor: 'rgba(34, 211, 238, 0.5)',
+                            borderRadius: 4
+                        },
+                        {
+                            label: '2025',
+                            data: [1247, 834, 556, 816, 991, 414],
+                            backgroundColor: 'rgba(244, 114, 182, 0.5)',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            align: 'end',
+                            labels: {
+                                color: '#94a3b8',
+                                usePointStyle: true,
+                                padding: 15,
+                                font: { family: 'DM Sans', size: 11 }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#64748b', font: { family: 'DM Sans', size: 10 } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#64748b', font: { family: 'Space Mono', size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            renderPapers(papers);
+            initCharts();
+        });
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            const filtered = papers.filter(p => 
+                p.title.toLowerCase().includes(query) ||
+                p.authors.toLowerCase().includes(query) ||
+                p.topic.toLowerCase().includes(query)
+            );
+            renderPapers(filtered);
+        });
+    </script>
+</body>
+</html>
